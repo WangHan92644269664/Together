@@ -1,0 +1,35 @@
+#test23  www开头的全部是前端自己设置的域名绑定，可以吧main改成随便的,  变化的只有中间的主域名
+variables:
+  REMOTE_SERVER: 47.244.188.233
+  LOCAL_SERVER: web.youtuoapp.com
+  LOCAL_SITE_CONF_PATH: /opt/web/data/web/nginx/sites-available
+  REMOTE_SITE_CONF_PATH: /opt/web/data/web/nginx/sites-available
+  LOCAL_WWW_PATH: /opt/web/data/web/www
+  REMOTE_WWW_PATH: /opt/web/data/web/www
+  LOCAL_DOCKER_PATH: /opt/web
+  REMOTE_DOCKER_PATH: /opt/web
+  LOCAL_DOMAIN: together.youtuoapp.com
+  REMOTE_DOMAIN: together.youtuosoft.com
+  LOCAL_MODE: 'history'
+  REMOTE_MODE: 'history'
+  LOCAL_PUBLIC: '/'
+  REMOTE_PUBLIC: '/'
+  LOCAL_API_URL: 'https://api.210112.youtuoapp.com/'
+  REMOTE_API_URL: 'https://api.210112.youtuosoft.com/'
+  LOCAL_IMG_URL: 'https://img.210112.youtuoapp.com/'
+  REMOTE_IMG_URL: 'https://img.210112.youtuosoft.com/'
+  LOCAL_RECOMMEND_URL: 'https://together.youtuoapp.com/'
+  REMOTE_RECOMMEND_URL: 'https://together.youtuosoft.com/'
+  LOCAL_HTTPS_DOMAIN: 'true' #是否开启TLS证书
+  LOCAL_HTTPS_HSTS: 'true' #只允许使用HTTPS,在开启HTTPS后这一项才能开启
+  REMOTE_HTTPS_DOMAIN: 'true' #是否开启TLS证书
+  REMOTE_HTTPS_HSTS: 'true' #只允许使用HTTPS,在开启HTTPS后这一项才能开启
+  APP_ID: com.together.youtuosoft #APP包id，不能使用-字符
+  APP_SHORT_NAME: together #英文，apk,ipa,plist下载文件名会用这个,iphone安装需用：itms-services://?action=download-manifest&url=https://shop.youtuoapp.com/vue-template.plist作为下载链接
+  APP_NAME: 爱拼 #APP中文名称
+  LOCAL_UPDATE_DOMAIN: update.together.youtuoapp.com
+  REMOTE_UPDATE_DOMAIN: update.together.youtuosoft.com
+  LOCAL_BUILD_PLATFORM: android #要构建的平台，值分别为android,ios,all，all表示android,ios平台都构建，
+  REMOTE_BUILD_PLATFORM: android #要构建的平台，值分别为android,ios,all，all表示android,ios平台都构建，
+  TARGET_VERSION: '^1.0.0' #安装有哪些App版本的手机可安装该更新,应在新的版本推送之前先推送git tag和原生组件更新,版本号规则可以参考这里：https://docs.microsoft.com/en-us/appcenter/distribution/codepush/cli#releasing-updates
+  ENABLE_APP: 'true' #true打包app，其它不打包app

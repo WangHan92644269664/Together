@@ -1,0 +1,44 @@
+{
+  "android": {
+    "debug": {
+      "keystore": "~/cordova/android.keystore",
+      "storePassword": "YoutuoSoft1234",
+      "alias": "sign",
+      "password" : "YoutuoSoft1234",
+      "keystoreType": "pkcs12"
+    },
+    "release": {
+      "keystore": "~/cordova/android.keystore",
+      "storePassword": "YoutuoSoft1234",
+      "alias": "sign",
+      "password" : "YoutuoSoft1234",
+      "keystoreType": "pkcs12"
+    }
+  },
+  "ios": {
+    "debug": {
+      "codeSignIdentity": "iPhone Developer",
+      "developmentTeam": "5ML5H2QXXT",
+      "packageType": "development",
+      "automaticProvisioning": true,
+      "buildFlag": [
+        "EMBEDDED_CONTENT_CONTAINS_SWIFT = YES",
+        "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO",
+        "-UseModernBuildSystem=0",
+        "LD_RUNPATH_SEARCH_PATHS = \"@executable_path/Frameworks\""
+      ]
+    },
+    "release": {
+      "codeSignIdentity": "iPhone Developer",
+      "developmentTeam": "5ML5H2QXXT",
+      "packageType": "ad-hoc",
+      "automaticProvisioning": true,
+      "buildFlag": [
+        "EMBEDDED_CONTENT_CONTAINS_SWIFT = YES",
+        "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO",
+        "-UseModernBuildSystem=0",
+        "LD_RUNPATH_SEARCH_PATHS = \"@executable_path/Frameworks\""
+      ]
+    }
+  }
+}

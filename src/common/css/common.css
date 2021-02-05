@@ -1,0 +1,360 @@
+/* 文字颜色 */
+.cursor{
+	cursor: pointer;
+}
+.font-white{
+	color: #FFFFFF;
+}
+
+.font-text {
+	color: #CFB47E;
+}
+
+.background-text {
+	background: #CFB47E;
+}
+
+.font-size {
+	font-size: 32rpx;
+}
+
+.font-ssize {
+	font-size: 30rpx;
+}
+
+.font-lsize {
+	font-size: 34rpx;
+}
+
+.font-grey {
+	color: #666666;
+}
+.font-small{
+	font-size: 20rpx;
+	transform: scale(0.9);
+}
+
+.font-red {
+	color: #E60012;
+}
+
+.home-infos {
+	margin: 20rpx auto 30rpx;
+	background: #FFFFFF;
+	padding: 20rpx 0;
+}
+
+.home-infos image {
+	width: 50%;
+}
+
+/* // 遮罩 */
+.coupon-bg {
+	flex-direction: column;
+}
+.coupon-bg image {
+	position: relative;
+	width: 500rpx;
+	height: 400rpx;
+	margin: 0 auto;
+}
+
+.coupon-bg .btns {
+	position: absolute;
+	bottom: 48rpx;
+	left: 8%;
+}
+
+.coupon-bg .btns button {
+	font-size: 28rpx;
+	background: #CFB47E;
+	height: 60rpx;
+	line-height: 60rpx;
+	width: 200rpx;
+}
+
+.coupon-bg .btns button:first-child {
+	margin-right: 30rpx;
+}
+
+.coupon-bg .icon-guanbi {
+	position: fixed;
+	bottom: 180rpx;
+	color: #FFFFFF;
+	font-size: 40rpx;
+	left: 46%;
+}
+
+
+
+
+/* ==================
+         模态窗口
+ ==================== */
+
+.cu-modal {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 1110;
+	opacity: 0;
+	outline: 0;
+	text-align: center;
+	-ms-transform: scale(1.185);
+	transform: scale(1.185);
+	backface-visibility: hidden;
+	perspective: 2000upx;
+	background: rgba(0, 0, 0, 0.6);
+	transition: all 0.3s ease-in-out 0s;
+	pointer-events: none;
+}
+
+.cu-modal::before {
+	content: "\200B";
+	display: inline-block;
+	height: 100%;
+	vertical-align: middle;
+}
+
+.cu-modal.show {
+	opacity: 1;
+	transition-duration: 0.3s;
+	-ms-transform: scale(1);
+	transform: scale(1);
+	overflow-x: hidden;
+	overflow-y: auto;
+	pointer-events: auto;
+}
+
+.cu-dialog {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	margin-left: auto;
+	margin-right: auto;
+	width: 680upx;
+	max-width: 100%;
+	background-color: #f8f8f8;
+	border-radius: 10upx;
+	overflow: hidden;
+}
+
+.cu-modal.bottom-modal::before {
+	vertical-align: bottom;
+}
+
+.cu-modal.bottom-modal .cu-dialog {
+	width: 100%;
+	border-radius: 0;
+}
+
+.cu-modal.bottom-modal {
+	margin-bottom: -1000upx;
+}
+
+.cu-modal.bottom-modal.show {
+	margin-bottom: 0;
+}
+
+.cu-modal.drawer-modal {
+	transform: scale(1);
+	display: flex;
+}
+
+.cu-modal.drawer-modal .cu-dialog {
+	height: 100%;
+	min-width: 200upx;
+	border-radius: 0;
+	margin: initial;
+	transition-duration: 0.3s;
+}
+
+.cu-modal.drawer-modal.justify-start .cu-dialog {
+	transform: translateX(-100%);
+}
+
+.cu-modal.drawer-modal.justify-end .cu-dialog {
+	transform: translateX(100%);
+}
+
+.cu-modal.drawer-modal.show .cu-dialog {
+	transform: translateX(0%);
+}
+
+.cu-modal .cu-dialog>.cu-bar:first-child .action {
+	min-width: 100rpx;
+	margin-right: 0;
+	min-height: 100rpx;
+}
+
+
+/* 按钮 */
+.mix-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100rpx;
+	margin: 60rpx auto 30rpx;
+	color: #fff;
+	background-color: #000;
+	border-radius: 50rpx;
+	box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.nodata {
+	margin-top: 20rpx;
+	color: #999;
+	font-size: 32rpx;
+	text-align: center;
+	display: inline-block;
+	width: 100%;
+}
+
+/* 表单样式 */
+.bor-red {
+	border-color: red !important;
+}
+
+.font-red,
+.icon-cuo {
+	color: red;
+}
+
+.bor-green {
+	border-color: #408ce2 !important;
+}
+
+.font-green,
+.icon-dui {
+	color: #408ce2;
+}
+
+.err-tips {
+	color: red;
+	font-size: 28rpx;
+	margin-top: 2rpx;
+	margin-bottom: 6rpx;
+}
+.size30{
+	font-size: 30rpx;
+}
+.size36{
+	font-size: 36rpx;
+}
+
+/*顯示一行文字*/
+.font-one {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.time-gray{
+	margin-top: 10rpx;
+	color: #999999;
+}
+
+/* flex布局 */
+.u-f {
+	display: flex;
+}
+
+.u-f-ac {
+	align-items: center;
+}
+
+.u-f-ae {
+	align-items: flex-end;
+}
+
+.u-f-jsb {
+	justify-content: space-between;
+}
+
+.u-f-fdc {
+	flex-direction: column;
+}
+
+.u-f-jsa {
+	justify-content: space-around;
+}
+
+.u-f-fw {
+	flex-wrap: wrap;
+}
+
+.u-f-jsc {
+	justify-content: center;
+}
+
+.u-f-js-fe {
+	justify-content: flex-end;
+}
+
+.u-f-js-fe {
+	justify-content: flex-end;
+}
+
+.u-f-f1 {
+	flex: 1;
+}
+
+input {
+	font-size: 32rpx;
+}
+
+/* logo图片 */
+.logo-img {
+	width: 160rpx;
+	height: 160rpx;
+	border-radius: 100%;
+	display: block;
+	margin: 30rpx auto;
+}
+
+/* 短信验证码的按钮 */
+.phone-code {
+	background: #b7becc;
+	color: #ffffff;
+	font-size: 32rpx;
+	padding: 10rpx;
+	border-radius: 3px;
+	width: 35%;
+	text-align: center;
+}
+
+/* 边框阴影 */
+.box-shadow {
+	box-shadow: 0 0 10rpx rgba(0, 0, 0, 0.2);
+}
+
+/* 显示一行 */
+.text-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* 文字中间横线 */
+.text-through {
+	text-decoration: line-through;
+	color: #aaaaaa;
+}
+
+/* 加载文字 */
+.loading-text {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 60rpx;
+	color: #aaaaaa;
+	font-size: 32rpx;
+}
+
+/* 加载更多 */
+.no-data {
+	margin-top: 1rem;
+}

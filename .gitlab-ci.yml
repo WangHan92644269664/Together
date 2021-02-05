@@ -1,0 +1,554 @@
+include:
+  - .gitlab-ci-var.yml
+variables:
+  GIT_DEPTH: 0 #用于获取所有提交日志，否者无法获取准确的提交次数
+stages:
+  - check #检查项目是否合法
+  - install #安装需要的资源，如npm install
+  - build #执行构建过程,如npm build
+  - package_build #执行cordova build
+  - deploy #执行部署，针对h5,app,小程序会执行不同的操作
+  - package_upload #app部署
+before_script:
+  - set -x
+  - . ci.sh
+#npm install
+vue:install:
+  stage: install
+  only:
+    changes:
+      - package.json
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  cache:
+    key: "node_modules-$CI_COMMIT_REF_SLUG"
+    policy: pull-push
+    paths:
+      - node_modules/
+      - package-lock.json
+  script:
+    - npm install
+#用于h5的npm build
+vue_history_route:build:
+  stage: build
+  only:
+    changes:
+      - src/**/*
+      - env/**/*
+      - public/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  artifacts:
+    name: dist_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    paths:
+      - dist/
+  cache:
+    key: "node_modules-$CI_COMMIT_REF_SLUG"
+    policy: pull
+    paths:
+      - node_modules/
+  dependencies:
+    - vue:install
+    - api_url:install
+  script:
+    - npm_build
+#用于app的npm build
+vue_hash_route:build:
+  stage: build
+  artifacts:
+    name: app_dist_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    paths:
+      - app_dist/
+  dependencies:
+    - vue:install
+    - api_url:install
+  cache:
+    key: "node_modules-$CI_COMMIT_REF_SLUG"
+    policy: pull
+    paths:
+      - node_modules/
+  only:
+    changes:
+      - src/**/*
+      - env/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+    variables:
+      - $ENABLE_APP == 'true'
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  script:
+    - npm_build_mode
+#部署h5,就是把build后的dist目录上传到nginx服务器上
+vue:deploy:
+  stage: deploy
+  only:
+    changes:
+      - src/**/*
+      - env/**/*
+      - public/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  dependencies:
+    - vue_history_route:build
+  needs:
+    - vue_history_route:build
+  retry: 2
+  script:
+    - cd dist && tar -czf ../${PROJ_NAME}.tar.gz *
+    - cd ..
+    - ssh root@$SERVER "mkdir -p $WWW_PATH/${PROJ_NAME}"
+    - scp -qB $CI_PROJECT_PATH_SLUG.tar.gz root@$SERVER:$WWW_PATH/
+    - |
+      ssh root@$SERVER " \
+      cd $WWW_PATH/${PROJ_NAME} \
+      && tar --overwrite -zxf ../${PROJ_NAME}.tar.gz \
+      && \rm ../${PROJ_NAME}.tar.gz"
+#创建或修改nginx站点
+site:deploy:
+  stage: deploy
+  artifacts:
+    name: certs_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    paths:
+      - certs/
+  retry: 1
+  only:
+    changes:
+      - .gitlab-ci-var.yml
+  dependencies: []
+  needs:
+    - proj:check
+  script:
+    - site
+    - down_cer
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+#修改在var中配置的API URL
+api_url:install:
+  stage: install
+  artifacts:
+    name: api_url_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    expire_in: 24 hr
+    paths:
+      - .env.local
+  only:
+    changes:
+      - src/**/*
+      - env/**/*
+      - public/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  dependencies: []
+  script:
+    - echo "NODE_ENV='$ENV_MODE'">> .env.local
+    - echo "VUE_APP_API_URL='${API_URL}'" >> .env.local
+    - echo "VUE_APP_IMG_URL='${IMG_URL}'" >> .env.local
+    - echo "VUE_APP_RECOMMEND_URL='${RECOMMEND_URL}'" >> .env.local
+    - echo "VUE_APP_SHORT_NAME='${APP_SHORT_NAME}'" >> .env.local
+    - echo "VUE_APP_VERSION='${APP_VERSION}'" >> .env.local
+    - echo "VUE_APP_BUILD_PLATFORM='${BUILD_PLATFORM}'" >> .env.local
+    - echo "VUE_APP_ENABLE_APP='${ENABLE_APP}'" >> .env.local
+#app包构建
+build:package_build:
+  stage: package_build
+  tags:
+    - package
+  timeout: 3 hours
+  dependencies:
+    - vue_hash_route:build
+  needs:
+    - vue_hash_route:build
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    policy: pull-push
+    paths:
+      - cordova_build/
+  only:
+    changes:
+      - src/**/*
+      - env/cordova/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+    variables:
+      - $ENABLE_APP == 'true'
+  script:
+    - package
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+#创建cordova项目
+package_create:install:
+  stage: install
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    policy: push
+    paths:
+      - cordova_build/
+  dependencies: []
+  needs:
+    - proj:check
+    - app:check
+  only:
+    changes:
+      - env/cordova/*
+      - .gitlab-ci-var.yml
+    variables:
+      - $ENABLE_APP == 'true'
+  script:
+    - create_package
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+#上传android apk到nginx服务器上
+android_dev:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    policy: pull
+    paths:
+      - cordova_build/
+  artifacts:
+    name: android_package_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    expire_in: 6 mos
+    paths:
+      - cordova_build/${APP_SHORT_NAME}.apk
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - dev
+    changes:
+      - src/**/*
+      - env/cordova/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+    variables:
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'android'
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'all'
+  script:
+    - upload_package_android
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  retry: 2
+#上传android apk到nginx服务器上
+android_master:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    policy: pull
+    paths:
+      - cordova_build/
+  artifacts:
+    name: android_package_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    expire_in: 6 mos
+    paths:
+      - cordova_build/${APP_SHORT_NAME}.apk
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - master
+    changes:
+      - src/**/*
+      - env/cordova/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+    variables:
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'android'
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'all'
+  script:
+    - upload_package_android
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  retry: 2
+#上传ios ipa到nginx服务器上
+ios_dev:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    paths:
+      - cordova_build/
+  artifacts:
+    name: ios_package_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    expire_in: 6 mos
+    paths:
+      - cordova_build/${APP_SHORT_NAME}.ipa
+      - cordova_build/${APP_SHORT_NAME}.plist
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - dev
+    changes:
+      - src/**/*
+      - env/cordova/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+    variables:
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'ios'
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'all'
+  script:
+    - upload_package_ios
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  retry: 2
+#上传ios ipa到nginx服务器上
+ios_master:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    paths:
+      - cordova_build/
+  artifacts:
+    name: ios_package_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    expire_in: 6 mos
+    paths:
+      - cordova_build/${APP_SHORT_NAME}.ipa
+      - cordova_build/${APP_SHORT_NAME}.plist
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - master
+    changes:
+      - src/**/*
+      - env/cordova/**/*
+      - package.json
+      - .gitlab-ci-var.yml
+    variables:
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'ios'
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'all'
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  script:
+    - upload_package_ios
+  retry: 2
+#部署热更新
+codepush_android_dev:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    policy: pull
+    paths:
+      - cordova_build/
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - dev
+    changes:
+      - src/**/*
+      - env/cordova/index.html
+    variables:
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'android'
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'all'
+  script:
+    - codepush_android
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  retry: 1
+#部署热更新
+codepush_android_master:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    policy: pull
+    paths:
+      - cordova_build/
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - master
+    changes:
+      - src/**/*
+      - env/cordova/index.html
+    variables:
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'android'
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'all'
+  script:
+    - codepush_android
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  retry: 1
+#部署热更新
+codepush_ios_dev:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    paths:
+      - cordova_build/
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - dev
+    changes:
+      - src/**/*
+      - env/cordova/index.html
+    variables:
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'ios'
+      - $ENABLE_APP == 'true' && $LOCAL_BUILD_PLATFORM == 'all'
+  script:
+    - codepush_ios
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  retry: 1
+#部署热更新
+codepush_ios_master:package_upload:
+  stage: package_upload
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    paths:
+      - cordova_build/
+  dependencies: []
+  needs:
+    - job: build:package_build
+      artifacts: false
+  only:
+    refs:
+      - master
+    changes:
+      - src/**/*
+      - env/cordova/index.html
+    variables:
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'ios'
+      - $ENABLE_APP == 'true' && $REMOTE_BUILD_PLATFORM == 'all'
+  except:
+    variables:
+      - $REMOVE_SITE
+      - $FORCE_SITE
+  script:
+    - codepush_ios
+  retry: 1
+#强力创建站点，当域名绑定失败或证书错误时可执行这个任务，执行时会清除以前的站点配置和证书
+force_site:deploy:
+  stage: deploy
+  artifacts:
+    name: certs_${CI_PROJECT_PATH_SLUG}_${CI_COMMIT_REF_NAME}
+    paths:
+      - certs/
+  only:
+    variables:
+      - $FORCE_SITE
+  except:
+    variables:
+      - $REMOVE_SITE
+  dependencies: []
+  needs:
+    - proj:check
+  script:
+    - force_site
+    - down_cer
+#移除站点，当网站下线不需要再运行时可以执行这个
+remove_site:deploy:
+  stage: deploy
+  only:
+    variables:
+      - $REMOVE_SITE
+  except:
+    variables:
+      - $FORCE_SITE
+  dependencies: []
+  needs: []
+  script:
+    - remove_site
+#检查项目冲突
+proj:check:
+  stage: check
+  only:
+    changes:
+      - .gitlab-ci-var.yml
+      - env/cordova/*
+      - package.json
+  dependencies: []
+  needs: []
+  script:
+    - check
+#检查APP冲突
+app:check:
+  stage: check
+  tags:
+    - package
+  cache:
+    key: "cordova_build-$CI_COMMIT_REF_SLUG"
+    policy: push
+    paths:
+      - cordova_build/
+  only:
+    changes:
+      - .gitlab-ci-var.yml
+      - env/cordova/*
+      - package.json
+    variables:
+      - $ENABLE_APP == 'true'
+  dependencies: []
+  needs: []
+  script:
+    - check_app

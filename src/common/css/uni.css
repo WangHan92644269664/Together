@@ -1,0 +1,30 @@
+
+uni-tabbar .uni-tabbar__icon {
+	width: 40upx;
+	height: 40upx;
+}
+
+uni-image>img {
+	opacity: 1;
+}
+
+image {
+	width: 100%;
+}
+
+.header uni-image>img {
+	position: relative;
+	width: 26px;
+	height: 26px;
+}
+.codeBtn{
+	width: 90%;
+	margin-top: 10upx;
+	background: #039157!important;
+	color: #FFFFFF;
+}
+.description .content img{
+	height: auto!important;
+}
+
+
